@@ -68,6 +68,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .item .del{margin-left:auto;width:38px;height:38px;border-radius:10px;border:2px solid var(--line);
   background:#fff;color:var(--mut);font-size:20px;line-height:1;cursor:pointer;flex:0 0 auto;font-family:inherit}
 .item .del:hover{border-color:#ffb3b3;color:#d33}
+.item.actrow:hover{border-color:#9ad6b5;background:#fbfefc}
 .sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px 26px}
 .sliders.one{grid-template-columns:minmax(240px,360px)}
 
@@ -276,20 +277,22 @@ details.set[open] summary:after{transform:rotate(-135deg);margin-top:2px}
         <button class="btn ghost" id="priceExport">Скопировать прайс (JSON)</button>
         <button class="btn ghost" id="priceRestore">Вернуть исходный прайс</button>
       </div>
+    </details>
+  </div>
 
-      <div style="margin-top:28px;padding-top:22px;border-top:1px solid var(--line)">
-        <div style="font-size:19px;font-weight:800;margin-bottom:14px">Активности</div>
-        <p class="lead" style="margin-bottom:16px">Аэротату, мехенди и другие — своя ставка за час и норма участников на мастера. Правки видны сразу и сохраняются в этом браузере. Чтобы обновить на сайте для всех, скопируйте JSON и вставьте в файл <b>acts.json</b> на GitHub.</p>
-        <div class="pick" style="max-width:480px">
-          <input id="actSearch" placeholder="Найдите активность, чтобы изменить ставку" autocomplete="off">
-          <div class="opts" id="actOpts"></div>
-        </div>
-        <div id="actForm"></div>
-        <div class="row">
-          <button class="btn" id="actNew">Добавить новую активность</button>
-          <button class="btn ghost" id="actExport">Скопировать активности (JSON)</button>
-          <button class="btn ghost" id="actRestore">Вернуть исходные активности</button>
-        </div>
+  <div class="card">
+    <details class="set">
+      <summary>Активности (Аэротату, мехенди и другие)</summary>
+      <p class="lead" style="margin:14px 0 18px">Своя ставка за час и норма участников на мастера для каждой активности. Кликните по любой, чтобы изменить. Правки видны сразу и сохраняются в этом браузере. Чтобы обновить на сайте для всех, скопируйте JSON и вставьте в файл <b>acts.json</b> на GitHub.</p>
+      <div class="pick" style="max-width:480px">
+        <input id="actSearch" placeholder="Фильтр по названию (необязательно)" autocomplete="off">
+      </div>
+      <div id="actListBox" style="margin-top:14px"></div>
+      <div id="actForm"></div>
+      <div class="row">
+        <button class="btn" id="actNew">Добавить новую активность</button>
+        <button class="btn ghost" id="actExport">Скопировать активности (JSON)</button>
+        <button class="btn ghost" id="actRestore">Вернуть исходные активности</button>
       </div>
     </details>
   </div>
@@ -712,43 +715,47 @@ function renderActForm(){
     const item = {n:name, h1, hx, per, note};
     if(est) item.est = 1;
     if(isNew) ACTS.push(item); else ACTS[actEditIndex] = item;
-    saveActs(); actEditIndex = null; renderActForm(); render();
+    saveActs(); actEditIndex = null; renderActForm(); renderActList(); render();
     toast(isNew ? 'Активность добавлена' : 'Активность обновлена');
   };
   if(!isNew){
     el('af-del').onclick = () => {
-      ACTS.splice(actEditIndex, 1); saveActs(); actEditIndex = null; renderActForm(); render();
+      ACTS.splice(actEditIndex, 1); saveActs(); actEditIndex = null; renderActForm(); renderActList(); render();
       toast('Активность удалена');
     };
   }
   el('af-cancel').onclick = () => { actEditIndex = null; renderActForm(); };
 }
 
-function initActSearch(){
-  const inp = el('actSearch'), box = el('actOpts');
-  const fmt = x => F(x.h1) + ' ₽ первый час · ' + F(x.hx) + ' ₽ далее · ' + x.per + ' чел/ч на мастера';
-  const show = () => {
-    const s = inp.value.toLowerCase().trim();
-    const idx = ACTS.map((x,i)=>i).filter(i => !s || ACTS[i].n.toLowerCase().includes(s));
-    box.innerHTML = idx.map(i => '<div data-i="' + i + '">' + esc(ACTS[i].n) + ' <span>' + esc(fmt(ACTS[i])) + '</span></div>').join('')
-      || '<div style="color:#9a9aa2;cursor:default">ничего не нашлось</div>';
-    box.classList.add('open');
-  };
-  inp.addEventListener('focus', show);
-  inp.addEventListener('input', show);
-  inp.addEventListener('blur', () => setTimeout(() => box.classList.remove('open'), 180));
-  box.addEventListener('mousedown', e => {
-    const v = e.target.closest('div[data-i]'); if(!v) return;
-    actEditIndex = +v.dataset.i; inp.value = ''; box.classList.remove('open'); renderActForm();
+function renderActList(){
+  const box = el('actListBox');
+  const s = (el('actSearch').value || '').toLowerCase().trim();
+  const idx = ACTS.map((x,i)=>i).filter(i => !s || ACTS[i].n.toLowerCase().includes(s));
+  box.innerHTML = idx.map(i => {
+    const x = ACTS[i];
+    return '<div class="item actrow" data-i="' + i + '" style="padding:16px 20px;margin-bottom:12px;cursor:pointer">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">' +
+        '<b style="font-size:17px">' + esc(x.n) + '</b>' +
+        '<span style="color:var(--mut);font-size:15px">' + F(x.h1) + ' ₽ первый час · ' + F(x.hx) + ' ₽ далее · ' + x.per + ' чел/ч на мастера' + (x.est ? ' · ставка ориентировочная' : '') + '</span>' +
+      '</div>' +
+    '</div>';
+  }).join('') || '<p style="color:#6b6b73;font-size:16px">' + (ACTS.length ? 'Ничего не нашлось.' : 'Активностей нет. Добавьте новую ниже.') + '</p>';
+  box.querySelectorAll('[data-i]').forEach(row => row.onclick = () => {
+    actEditIndex = +row.dataset.i; renderActForm();
   });
+}
+
+function initActSearch(){
+  el('actSearch').addEventListener('input', renderActList);
   el('actNew').onclick = () => { actEditIndex = 'new'; renderActForm(); };
   el('actExport').onclick = () => {
     navigator.clipboard.writeText(JSON.stringify(ACTS)).then(() => toast('Активности скопированы — вставьте в acts.json на GitHub'));
   };
   el('actRestore').onclick = () => {
-    ACTS = ACTS_BUILTIN.slice(); saveActs(); actEditIndex = null; renderActForm(); render();
+    ACTS = ACTS_BUILTIN.slice(); saveActs(); actEditIndex = null; renderActForm(); renderActList();
     toast('Активности восстановлены к исходным');
   };
+  renderActList();
 }
 
 /* ── события ── */
