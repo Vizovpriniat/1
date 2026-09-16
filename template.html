@@ -2,7 +2,7 @@
 <html lang="ru"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Калькулятор мастер-классов · Каталист</title>
+<title>Калькулятор мастер-классов · Вызов принят</title>
 <link rel="icon" href="img/logo.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -16,7 +16,7 @@ body{background:var(--bg);color:#fff;font-family:-apple-system,'Segoe UI',Roboto
 
 /* ── шапка ── */
 .top{display:flex;align-items:center;gap:18px;margin-bottom:26px;flex-wrap:wrap}
-.top img{width:64px;height:64px;border-radius:14px;display:block}
+.top img{height:56px;width:auto;display:block}
 .ttl{font-size:34px;font-weight:800;letter-spacing:-.02em}
 .sub{font-size:19px;color:#9a9aa2;margin-top:4px}
 .saved{margin-left:auto;font-size:16px;color:#7b7b83;display:flex;align-items:center;gap:9px}
@@ -165,7 +165,7 @@ details.set[open] summary:after{transform:rotate(-135deg);margin-top:2px}
 <div class="w">
 
 <div class="top">
-  <img src="img/logo.png" alt="Каталист">
+  <img src="img/logo.png" alt="Вызов принят">
   <div>
     <div class="ttl">Калькулятор мастер-классов</div>
     <div class="sub">Считает по формулам таблицы: мастера, участники, длительность, цена клиенту</div>
@@ -690,7 +690,7 @@ el('resetBtn').onclick = () => {
 el('copyBtn').onclick = () => {
   const t = totals();
   const L = [];
-  L.push('РАСЧЁТ МАСТЕР-КЛАССОВ, Каталист');
+  L.push('РАСЧЁТ МАСТЕР-КЛАССОВ, Вызов принят');
   L.push('Гостей: ' + S.guests + ', длительность: ' + S.hours + ' ч');
   L.push('');
   S.mk.forEach((it, i) => {
