@@ -31,12 +31,16 @@ body{background:var(--bg);color:#fff;font-family:-apple-system,'Segoe UI',Roboto
 .card h2{font-size:26px;font-weight:800;letter-spacing:-.015em;margin-bottom:6px}
 .card .lead{font-size:17px;color:var(--mut);line-height:1.45;margin-bottom:22px}
 
-/* ── ползунки ── */
+/* ── ползунки и ячейки со значением ── */
 .fld{margin-bottom:22px}
 .fld:last-child{margin-bottom:0}
 .fld label{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:600;margin-bottom:11px}
-.fld label b{margin-left:auto;font-size:24px;font-weight:800;color:#fff;background:var(--g);
-  border-radius:10px;padding:3px 14px;min-width:104px;text-align:center;letter-spacing:-.01em}
+.cell{margin-left:auto;font-size:24px;font-weight:800;color:#fff;background:var(--g);border:0;
+  border-radius:10px;padding:3px 10px;width:104px;text-align:center;letter-spacing:-.01em;font-family:inherit;
+  -moz-appearance:textfield;cursor:text}
+.cell::-webkit-outer-spin-button,.cell::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.cell:focus{outline:2px solid #fff;outline-offset:-2px}
+@media(max-width:520px){.cell{width:88px;font-size:21px}}
 .fld .hint{font-size:15px;color:var(--mut);margin-top:8px;line-height:1.4}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:99px;
   background:linear-gradient(var(--g),var(--g)) 0/var(--p,0%) 100% no-repeat #ececf0;outline:0;cursor:pointer}
@@ -44,13 +48,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;heigh
   background:var(--ink);border:5px solid var(--g);cursor:pointer}
 input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--ink);
   border:5px solid var(--g);cursor:pointer}
-
-/* ── сегменты режима ── */
-.seg{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px}
-.seg button{height:var(--btn-h);padding:0 20px;border:2px solid var(--line);background:#fff;color:var(--ink);
-  border-radius:14px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;transition:.12s}
-.seg button:hover{border-color:#c9c9d2}
-.seg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 
 /* ── кнопки ── */
 .btn{height:var(--btn-h);padding:0 22px;border:0;border-radius:14px;background:var(--g);color:#fff;
@@ -72,6 +69,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
   background:#fff;color:var(--mut);font-size:20px;line-height:1;cursor:pointer;flex:0 0 auto;font-family:inherit}
 .item .del:hover{border-color:#ffb3b3;color:#d33}
 .sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px 26px}
+.sliders.one{grid-template-columns:minmax(240px,360px)}
 
 /* ── выбор МК ── */
 .pick{position:relative;flex:1 1 260px;min-width:0}
@@ -180,35 +178,24 @@ details.set[open] summary:after{transform:rotate(-135deg);margin-top:2px}
 
   <div class="card">
     <h2>Мероприятие</h2>
-    <p class="lead">Задайте гостей и длительность, дальше добавьте мастер-классы. Что именно считать, выберите ниже.</p>
+    <p class="lead">Задайте гостей и длительность мероприятия, дальше добавьте мастер-классы — цену посчитаем автоматически.</p>
 
     <div class="fld">
-      <label>Гостей на мероприятии <b id="v-guests">200</b></label>
-      <input type="range" id="guests" min="10" max="1000" step="5" value="200">
+      <label>Гостей на мероприятии <input class="cell" type="number" inputmode="numeric" id="n-guests" value="200" min="0" max="1000" step="5"></label>
+      <input type="range" id="guests" min="0" max="1000" step="5" value="200">
       <div class="hint">Общее число участников мероприятия</div>
     </div>
 
-    <div class="fld" id="hoursFld">
-      <label>Длительность, часов <b id="v-hours">2</b></label>
+    <div class="fld">
+      <label>Длительность, часов <input class="cell" type="number" inputmode="numeric" id="n-hours" value="2" min="1" max="10" step="1"></label>
       <input type="range" id="hours" min="1" max="10" step="1" value="2">
       <div class="hint">Сколько часов работают площадки мастер-классов</div>
-    </div>
-
-    <div style="margin-top:26px">
-      <div style="font-size:18px;font-weight:600;margin-bottom:12px">Что считаем</div>
-      <div class="seg" id="modeSeg">
-        <button data-m="masters" class="on">Количество мастеров</button>
-        <button data-m="parts">Количество участников</button>
-        <button data-m="dur">Длительность</button>
-        <button data-m="manual">Всё вручную</button>
-      </div>
-      <div class="hint" id="modeHint" style="font-size:15px;color:#6b6b73"></div>
     </div>
   </div>
 
   <div class="card">
     <h2>Мастер-классы</h2>
-    <p class="lead">Каждый мастер-класс считается отдельно: своё число участников, свои мастера, своя цена расходников по диапазону.</p>
+    <p class="lead">Впишите участников на каждый мастер-класс — число мастеров и цену расходников по диапазону посчитаем сами.</p>
     <div id="mkList"></div>
     <div class="row">
       <button class="btn" id="addMk">Добавить мастер-класс</button>
@@ -275,7 +262,24 @@ details.set[open] summary:after{transform:rotate(-135deg);margin-top:2px}
     </details>
   </div>
 
-  <p class="foot">Все ставки и формулы взяты из первой вкладки таблицы «Калькулятор МК (х1,67)». Мастера считаются с округлением вверх, длительность в режиме расчёта округляется до целого часа. Цена клиенту это расход, умноженный на наценку.</p>
+  <div class="card">
+    <details class="set">
+      <summary>Прайс и категории</summary>
+      <p class="lead" style="margin:14px 0 18px">Добавляйте мастер-классы и категории или меняйте цену за участника. Правки видны сразу в калькуляторе и сохраняются в этом браузере. Чтобы обновить прайс на сайте для всех, нажмите «Скопировать прайс» и вставьте результат в файл <b>mk.json</b> на GitHub.</p>
+      <div class="pick" style="max-width:480px">
+        <input id="priceSearch" placeholder="Найдите мастер-класс, чтобы изменить цену" autocomplete="off">
+        <div class="opts" id="priceOpts"></div>
+      </div>
+      <div id="priceForm"></div>
+      <div class="row">
+        <button class="btn" id="priceNew">Добавить новый мастер-класс</button>
+        <button class="btn ghost" id="priceExport">Скопировать прайс (JSON)</button>
+        <button class="btn ghost" id="priceRestore">Вернуть исходный прайс</button>
+      </div>
+    </details>
+  </div>
+
+  <p class="foot">Все ставки и формулы взяты из первой вкладки таблицы «Калькулятор МК (х1,67)». Мастера считаются по числу участников с округлением вверх. Цена клиенту это расход, умноженный на наценку.</p>
 </div>
 
 <div>
@@ -312,7 +316,8 @@ details.set[open] summary:after{transform:rotate(-135deg);margin-top:2px}
 <div class="toast" id="toast"></div>
 
 <script>
-const MK = /*__MK__*/[];
+const MK_BUILTIN = /*__MK__*/[];
+let MK = loadMk() || MK_BUILTIN.slice();
 
 const ACTS = [
   {n:'Аэротату',                  h1:4500, hx:3500, per:15, note:'3 до 5 минут на участника'},
@@ -324,25 +329,20 @@ const ACTS = [
   {n:'Бьюти-бар (косы)',          h1:4500, hx:3500, per:2,  note:'1 час, 1 мастер, 2 до 3 человек'}
 ];
 
-const MODE_HINT = {
-  masters:'Вводите участников на каждом мастер-классе, калькулятор считает, сколько нужно мастеров.',
-  parts:'Вводите мастеров на каждом мастер-классе, калькулятор считает, скольких участников они успеют.',
-  dur:'Вводите участников и мастеров, калькулятор считает, сколько часов займёт мастер-класс.',
-  manual:'Нестандартный запрос: участники, мастера и часы задаются руками, ничего не пересчитывается.'
-};
-
 const F = n => new Intl.NumberFormat('ru-RU').format(Math.round(n));
 const el = id => document.getElementById(id);
 
 let S = load() || {
-  guests:200, hours:2, mode:'masters', fixMode:'each', rangeMode:'mk',
+  guests:200, hours:2, fixMode:'each', rangeMode:'mk',
   base:3500, add:500, norm:20, fix:2000, margin:1.67,
-  mk:[{name:'Роспись кружек', p:100, m:2, h:2}, {name:'Свечи в банке', p:100, m:2, h:2}],
+  mk:[{name:'Роспись кружек', p:100}, {name:'Свечи в банке', p:100}],
   act:[{name:'Аэротату', m:1, h:2}]
 };
 
 function save(){ try{ localStorage.setItem('kalk-mk-v1', JSON.stringify(S)); flash(); }catch(e){} }
 function load(){ try{ const r=localStorage.getItem('kalk-mk-v1'); return r?JSON.parse(r):null; }catch(e){ return null; } }
+function saveMk(){ try{ localStorage.setItem('kalk-mk-prices-v1', JSON.stringify(MK)); flash(); }catch(e){} }
+function loadMk(){ try{ const r=localStorage.getItem('kalk-mk-prices-v1'); return r?JSON.parse(r):null; }catch(e){ return null; } }
 let flashT;
 function flash(){ const n=el('saveNote'); n.textContent='сохранено'; clearTimeout(flashT);
   flashT=setTimeout(()=>n.textContent='расчёт сохраняется автоматически',1600); }
@@ -355,22 +355,11 @@ function priceOf(item, parts){
   return {val:m.c[i], label:['до 50 человек','51 до 99 человек','от 100 человек'][i], mk:m};
 }
 
-/* расчёт одной позиции мастер-класса */
+/* расчёт одной позиции мастер-класса: участники — единственный ввод, мастера считаются по норме */
 function calcMk(it){
-  const norm = Math.max(1, +S.norm), hoursGlobal = Math.max(1, +S.hours);
-  let parts, masters, hours;
-  if(S.mode === 'masters'){
-    hours = hoursGlobal; parts = Math.max(1, it.p|0);
-    masters = Math.ceil(parts / (norm * hours));
-  } else if(S.mode === 'parts'){
-    hours = hoursGlobal; masters = Math.max(1, it.m|0);
-    parts = masters * norm * hours;
-  } else if(S.mode === 'dur'){
-    parts = Math.max(1, it.p|0); masters = Math.max(1, it.m|0);
-    hours = Math.max(1, Math.round(parts / (masters * norm)));
-  } else {
-    parts = Math.max(1, it.p|0); masters = Math.max(1, it.m|0); hours = Math.max(1, it.h|0);
-  }
+  const norm = Math.max(1, +S.norm), hours = Math.max(1, +S.hours);
+  const parts = Math.max(0, it.p|0);
+  const masters = Math.ceil(parts / (norm * hours));
   const pr = priceOf(it, parts);
   const perMaster = (+S.base) + (hours - 1) * (+S.add);
   const costMasters = perMaster * masters;
@@ -408,8 +397,9 @@ function optionRows(q, list, fmt){
 }
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-function slider(id, label, val, min, max, step, hint){
-  return '<div class="fld"><label>' + label + ' <b id="lb-' + id + '">' + val + '</b></label>' +
+function field(id, label, val, min, max, step, hint){
+  return '<div class="fld"><label>' + label + ' <input class="cell" type="number" inputmode="numeric" id="n-' + id +
+    '" value="' + val + '" min="' + min + '" max="' + max + '" step="' + step + '"></label>' +
     '<input type="range" id="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '">' +
     (hint ? '<div class="hint">' + hint + '</div>' : '') + '</div>';
 }
@@ -418,26 +408,19 @@ function renderMk(){
   el('mkList').innerHTML = S.mk.map((it, i) => {
     const r = calcMk(it);
     const m = r.price ? r.price.mk : null;
-    let sl = '';
-    if(S.mode === 'masters')      sl = slider('mp'+i, 'Участников', r.parts, 1, 1000, 1, 'Сколько человек пройдёт этот мастер-класс');
-    else if(S.mode === 'parts')   sl = slider('mm'+i, 'Мастеров', r.masters, 1, 30, 1, 'Сколько мастеров ставим на площадку');
-    else if(S.mode === 'dur')     sl = slider('mp'+i, 'Участников', r.parts, 1, 1000, 1) + slider('mm'+i, 'Мастеров', r.masters, 1, 30, 1);
-    else                          sl = slider('mp'+i, 'Участников', r.parts, 1, 1000, 1) + slider('mm'+i, 'Мастеров', r.masters, 1, 30, 1) + slider('mh'+i, 'Часов', r.hours, 1, 12, 1);
-
     const noPrice = !r.price;
     return '<div class="item"><div class="head"><div class="num">' + (i+1) + '</div>' +
       '<div class="pick"><input id="pk'+i+'" value="' + esc(it.name) + '" placeholder="Начните вводить название" autocomplete="off">' +
       '<div class="opts" id="op'+i+'"></div></div>' +
       '<button class="del" data-del="'+i+'" title="Убрать">×</button></div>' +
-      '<div class="sliders">' + sl + '</div>' +
+      '<div class="sliders one">' + field('mp'+i, 'Участников', it.p|0, 0, 1000, 1, 'Сколько человек пройдёт этот мастер-класс') + '</div>' +
       '<div class="mini">' +
-        '<div><b>' + r.masters + '</b>мастеров</div>' +
-        '<div><b>' + r.parts + '</b>участников</div>' +
-        '<div><b>' + r.hours + ' ч</b>длительность</div>' +
+        '<div><b>' + r.masters + '</b>мастеров нужно</div>' +
+        '<div><b>' + r.hours + ' ч</b>длительность мероприятия</div>' +
         '<div><b>' + (r.price ? F(r.price.val) + ' ₽' : 'нет цены') + '</b>' + (r.price ? 'за участника, ' + r.price.label : 'позиция не найдена') + '</div>' +
         '<div class="acc"><b>' + F((r.costMasters + r.costMat + (S.fixMode==='each' ? +S.fix : 0)) * (+S.margin)) + ' ₽</b>клиенту за этот МК</div>' +
       '</div>' +
-      (noPrice ? '<div class="warn">Такого мастер-класса нет в прайсе таблицы. Выберите название из списка, иначе расходники не посчитаются.</div>' : '') +
+      (noPrice ? '<div class="warn">Такого мастер-класса нет в прайсе. Выберите название из списка, иначе расходники не посчитаются.</div>' : '') +
       (m && m.a ? '<div class="warn" style="background:#f2fbf6;border-color:#bfe8d1;color:#0a6b39">Возраст участников: ' + esc(m.a) + (m.k ? '. Категория: ' + esc(m.k) : '') + '</div>' : '') +
       '</div>';
   }).join('') || '<p style="color:#6b6b73;font-size:17px">Пока ни одного мастер-класса. Нажмите «Добавить мастер-класс».</p>';
@@ -455,9 +438,7 @@ function renderMk(){
     });
     if(!findMk(it.name)) inp.classList.add('bad');
 
-    bindRange('mp'+i, v => { it.p = v; });
-    bindRange('mm'+i, v => { it.m = v; });
-    bindRange('mh'+i, v => { it.h = v; });
+    bindField('mp'+i, v => { it.p = v; });
   });
 
   document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
@@ -473,8 +454,8 @@ function renderAct(){
       '<div class="opts" id="ao'+i+'"></div></div>' +
       '<button class="del" data-adel="'+i+'" title="Убрать">×</button></div>' +
       '<div class="sliders">' +
-        slider('ah'+i, 'Часов работы', r.hours, 1, 12, 1, 'Первый час по ставке ' + F(r.a.h1) + ' ₽, дальше по ' + F(r.a.hx) + ' ₽ за час') +
-        slider('am'+i, 'Мастеров', r.masters, 1, 20, 1, 'Число мастеров задаёте вы') +
+        field('ah'+i, 'Часов работы', r.hours, 1, 12, 1, 'Первый час по ставке ' + F(r.a.h1) + ' ₽, дальше по ' + F(r.a.hx) + ' ₽ за час') +
+        field('am'+i, 'Мастеров', r.masters, 1, 20, 1, 'Число мастеров задаёте вы') +
       '</div>' +
       '<div class="mini">' +
         '<div><b>' + r.parts + '</b>участников ориентировочно</div>' +
@@ -497,8 +478,8 @@ function renderAct(){
       const v = e.target.closest('div[data-v]'); if(!v) return;
       it.name = v.dataset.v; box.classList.remove('open'); render(); save();
     });
-    bindRange('ah'+i, v => { it.h = v; });
-    bindRange('am'+i, v => { it.m = v; });
+    bindField('ah'+i, v => { it.h = v; });
+    bindField('am'+i, v => { it.m = v; });
   });
 
   document.querySelectorAll('[data-adel]').forEach(b => b.onclick = () => {
@@ -509,32 +490,44 @@ function renderAct(){
 function fill(r){
   if(!r) return;
   const min = +r.min, max = +r.max;
-  r.style.setProperty('--p', ((r.value - min) / (max - min) * 100) + '%');
+  const v = Math.min(Math.max(+r.value, min), max);
+  r.style.setProperty('--p', ((v - min) / (max - min) * 100) + '%');
 }
 function fillAll(){ document.querySelectorAll('input[type=range]').forEach(fill); }
 
-function bindRange(id, set){
-  const r = el(id); if(!r) return;
+/* поле = ползунок + кликабельная ячейка с числом, синхронизированы в обе стороны */
+function bindField(id, set){
+  const r = el(id), n = el('n-'+id); if(!r || !n) return;
+  const floor = +n.min || 0;
   fill(r);
+  n.addEventListener('focus', () => n.select());
+  n.addEventListener('keydown', e => { if(e.key === 'Enter') n.blur(); });
   r.addEventListener('input', () => {
-    const lb = el('lb-'+id); if(lb) lb.textContent = r.value;
-    fill(r); set(+r.value); renderTotals(); renderMiniOnly();
+    n.value = r.value; fill(r); set(+r.value); renderTotals(); renderMiniOnly();
   });
   r.addEventListener('change', () => { render(); save(); });
+  n.addEventListener('input', () => {
+    if(n.value === '') return;
+    const v = Math.max(floor, Math.round(+n.value) || floor);
+    r.value = v; fill(r); set(v); renderTotals(); renderMiniOnly();
+  });
+  n.addEventListener('change', () => {
+    const v = n.value === '' ? floor : Math.max(floor, Math.round(+n.value) || floor);
+    n.value = v; set(v); render(); save();
+  });
 }
 
-/* мини-итоги внутри карточек без полной перерисовки, чтобы ползунок не терял фокус */
+/* мини-итоги внутри карточек без полной перерисовки, чтобы поле не теряло фокус */
 function renderMiniOnly(){
   S.mk.forEach((it, i) => {
     const box = el('pk'+i); if(!box) return;
     const item = box.closest('.item'); const r = calcMk(it);
     const m = item.querySelectorAll('.mini > div');
-    if(m.length >= 5){
-      m[0].innerHTML = '<b>' + r.masters + '</b>мастеров';
-      m[1].innerHTML = '<b>' + r.parts + '</b>участников';
-      m[2].innerHTML = '<b>' + r.hours + ' ч</b>длительность';
-      m[3].innerHTML = '<b>' + (r.price ? F(r.price.val) + ' ₽' : 'нет цены') + '</b>' + (r.price ? 'за участника, ' + r.price.label : 'позиция не найдена');
-      m[4].innerHTML = '<b>' + F((r.costMasters + r.costMat + (S.fixMode==='each' ? +S.fix : 0)) * (+S.margin)) + ' ₽</b>клиенту за этот МК';
+    if(m.length >= 4){
+      m[0].innerHTML = '<b>' + r.masters + '</b>мастеров нужно';
+      m[1].innerHTML = '<b>' + r.hours + ' ч</b>длительность мероприятия';
+      m[2].innerHTML = '<b>' + (r.price ? F(r.price.val) + ' ₽' : 'нет цены') + '</b>' + (r.price ? 'за участника, ' + r.price.label : 'позиция не найдена');
+      m[3].innerHTML = '<b>' + F((r.costMasters + r.costMat + (S.fixMode==='each' ? +S.fix : 0)) * (+S.margin)) + ' ₽</b>клиенту за этот МК';
     }
   });
   S.act.forEach((it, i) => {
@@ -590,41 +583,109 @@ function renderTotals(){
 }
 
 function render(){
-  el('v-guests').textContent = S.guests;
-  el('v-hours').textContent = S.hours;
-  el('guests').value = S.guests;
-  el('hours').value = S.hours;
-  el('hoursFld').style.display = (S.mode === 'dur' || S.mode === 'manual') ? 'none' : '';
-  el('modeHint').textContent = MODE_HINT[S.mode];
-  document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.m === S.mode));
+  el('n-guests').value = S.guests; el('guests').value = S.guests; fill(el('guests'));
+  el('n-hours').value = S.hours; el('hours').value = S.hours; fill(el('hours'));
   document.querySelectorAll('#fixMode button').forEach(b => b.classList.toggle('on', b.dataset.v === S.fixMode));
   document.querySelectorAll('#rangeMode button').forEach(b => b.classList.toggle('on', b.dataset.v === S.rangeMode));
   ['base','add','norm','fix','margin'].forEach(k => { const i = el('s-'+k); if(i && document.activeElement !== i) i.value = S[k]; });
   renderMk(); renderAct(); renderTotals(); fillAll();
 }
 
-/* ── события ── */
-el('guests').addEventListener('input', e => { S.guests = +e.target.value; el('v-guests').textContent = S.guests; fill(e.target); renderTotals(); });
-el('guests').addEventListener('change', () => { render(); save(); });
-el('hours').addEventListener('input', e => { S.hours = +e.target.value; el('v-hours').textContent = S.hours; fill(e.target); renderMiniOnly(); renderTotals(); });
-el('hours').addEventListener('change', () => { render(); save(); });
+/* ── прайс и категории ── */
+function mkCategories(){ return [...new Set(MK.map(x => x.k).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru')); }
 
-document.querySelectorAll('#modeSeg button').forEach(b => b.onclick = () => { S.mode = b.dataset.m; render(); save(); });
+let priceEditIndex = null;
+function renderPriceForm(){
+  const box = el('priceForm');
+  if(priceEditIndex === null){ box.innerHTML = ''; return; }
+  const isNew = priceEditIndex === 'new';
+  const it = isNew ? {n:'', c:[0,0,0], k:'', a:''} : MK[priceEditIndex];
+  box.innerHTML =
+    '<div class="sets" style="margin-top:4px">' +
+      '<div><label>Название</label><input type="text" id="pf-n" value="' + esc(it.n) + '"></div>' +
+      '<div><label>Категория</label><input type="text" id="pf-k" list="pf-catlist" value="' + esc(it.k||'') + '"></div>' +
+      '<div><label>До 50 чел, ₽</label><input type="number" id="pf-c0" value="' + (it.c?it.c[0]:0) + '" min="0" step="10"></div>' +
+      '<div><label>51–99 чел, ₽</label><input type="number" id="pf-c1" value="' + (it.c?it.c[1]:0) + '" min="0" step="10"></div>' +
+      '<div><label>От 100 чел, ₽</label><input type="number" id="pf-c2" value="' + (it.c?it.c[2]:0) + '" min="0" step="10"></div>' +
+      '<div><label>Возраст (необязательно)</label><input type="text" id="pf-a" value="' + esc(it.a||'') + '" placeholder="например, с 10 лет"></div>' +
+    '</div>' +
+    '<datalist id="pf-catlist">' + mkCategories().map(c => '<option value="' + esc(c) + '">').join('') + '</datalist>' +
+    '<div class="row">' +
+      '<button class="btn" id="pf-save">' + (isNew ? 'Добавить в прайс' : 'Сохранить') + '</button>' +
+      (isNew ? '' : '<button class="btn ghost" id="pf-del">Удалить из прайса</button>') +
+      '<button class="btn ghost" id="pf-cancel">Отмена</button>' +
+    '</div>';
+
+  el('pf-save').onclick = () => {
+    const name = el('pf-n').value.trim();
+    if(!name){ toast('Впишите название мастер-класса'); return; }
+    const c = [Math.max(0,+el('pf-c0').value||0), Math.max(0,+el('pf-c1').value||0), Math.max(0,+el('pf-c2').value||0)];
+    const k = el('pf-k').value.trim(), a = el('pf-a').value.trim();
+    const item = {n:name, c};
+    if(k) item.k = k;
+    if(a) item.a = a;
+    if(isNew) MK.push(item); else MK[priceEditIndex] = item;
+    saveMk(); priceEditIndex = null; renderPriceForm(); render();
+    toast(isNew ? 'Мастер-класс добавлен в прайс' : 'Цена обновлена');
+  };
+  if(!isNew){
+    el('pf-del').onclick = () => {
+      MK.splice(priceEditIndex, 1); saveMk(); priceEditIndex = null; renderPriceForm(); render();
+      toast('Убрано из прайса');
+    };
+  }
+  el('pf-cancel').onclick = () => { priceEditIndex = null; renderPriceForm(); };
+}
+
+function initPriceSearch(){
+  const inp = el('priceSearch'), box = el('priceOpts');
+  const fmt = x => x.c ? (F(x.c[0]) + ' / ' + F(x.c[1]) + ' / ' + F(x.c[2]) + ' ₽' + (x.k ? ' · ' + x.k : '')) : 'цены нет';
+  const show = () => {
+    const s = inp.value.toLowerCase().trim();
+    const idx = MK.map((x,i)=>i).filter(i => !s || MK[i].n.toLowerCase().includes(s)).slice(0,80);
+    box.innerHTML = idx.map(i => '<div data-i="' + i + '">' + esc(MK[i].n) + ' <span>' + esc(fmt(MK[i])) + '</span></div>').join('')
+      || '<div style="color:#9a9aa2;cursor:default">ничего не нашлось</div>';
+    box.classList.add('open');
+  };
+  inp.addEventListener('focus', show);
+  inp.addEventListener('input', show);
+  inp.addEventListener('blur', () => setTimeout(() => box.classList.remove('open'), 180));
+  box.addEventListener('mousedown', e => {
+    const v = e.target.closest('div[data-i]'); if(!v) return;
+    priceEditIndex = +v.dataset.i; inp.value = ''; box.classList.remove('open'); renderPriceForm();
+  });
+  el('priceNew').onclick = () => { priceEditIndex = 'new'; renderPriceForm(); };
+  el('priceExport').onclick = () => {
+    navigator.clipboard.writeText(JSON.stringify(MK)).then(() => toast('Прайс скопирован — вставьте в mk.json на GitHub'));
+  };
+  el('priceRestore').onclick = () => {
+    MK = MK_BUILTIN.slice(); saveMk(); priceEditIndex = null; renderPriceForm(); render();
+    toast('Прайс восстановлен к исходному из mk.json');
+  };
+}
+
+/* ── события ── */
+bindField('guests', v => { S.guests = v; });
+bindField('hours', v => { S.hours = v; });
+
 document.querySelectorAll('#fixMode button').forEach(b => b.onclick = () => { S.fixMode = b.dataset.v; render(); save(); });
 document.querySelectorAll('#rangeMode button').forEach(b => b.onclick = () => { S.rangeMode = b.dataset.v; render(); save(); });
 ['base','add','norm','fix','margin'].forEach(k => el('s-'+k).addEventListener('input', e => {
   S[k] = +e.target.value || 0; renderMiniOnly(); renderTotals(); save();
 }));
 
-el('addMk').onclick = () => { S.mk.push({name:'', p:50, m:1, h:S.hours}); render(); save(); };
-el('addAct').onclick = () => { S.act.push({name:ACTS[0].n, m:1, h:S.hours}); render(); save(); };
+el('addMk').onclick = () => { S.mk.push({name:'', p:0}); render(); save(); };
+el('addAct').onclick = () => { S.act.push({name:ACTS[0].n, m:1, h:Math.max(1, S.hours)}); render(); save(); };
 el('splitEven').onclick = () => {
   if(!S.mk.length) return;
   const per = Math.max(1, Math.round(S.guests / S.mk.length));
   S.mk.forEach(x => x.p = per); render(); save(); toast('Гости разделены поровну');
 };
 el('allEach').onclick = () => { S.mk.forEach(x => x.p = S.guests); render(); save(); toast('На каждый мастер-класс поставлены все гости'); };
-el('resetBtn').onclick = () => { localStorage.removeItem('kalk-mk-v1'); location.reload(); };
+el('resetBtn').onclick = () => {
+  S.guests = 0; S.hours = 1; S.mk = []; S.act = [];
+  render(); save(); toast('Расчёт сброшен, можно начинать заново');
+};
 
 el('copyBtn').onclick = () => {
   const t = totals();
@@ -656,6 +717,7 @@ let toastT;
 function toast(msg){ const t = el('toast'); t.textContent = msg; t.classList.add('show');
   clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1900); }
 
+initPriceSearch();
 render();
 </script>
 </body></html>
