@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Калькулятор мастер-классов · Вызов принят</title>
-<link rel="icon" href="img/logo.png">
+<link rel="icon" href="img/logo-vp.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -165,7 +165,7 @@ details.set[open] summary:after{transform:rotate(-135deg);margin-top:2px}
 <div class="w">
 
 <div class="top">
-  <img src="img/logo.png" alt="Вызов принят">
+  <img src="img/logo-vp.png" alt="Вызов принят">
   <div>
     <div class="ttl">Калькулятор мастер-классов</div>
     <div class="sub">Считает по формулам таблицы: мастера, участники, длительность, цена клиенту</div>
@@ -276,6 +276,21 @@ details.set[open] summary:after{transform:rotate(-135deg);margin-top:2px}
         <button class="btn ghost" id="priceExport">Скопировать прайс (JSON)</button>
         <button class="btn ghost" id="priceRestore">Вернуть исходный прайс</button>
       </div>
+
+      <div style="margin-top:28px;padding-top:22px;border-top:1px solid var(--line)">
+        <div style="font-size:19px;font-weight:800;margin-bottom:14px">Активности</div>
+        <p class="lead" style="margin-bottom:16px">Аэротату, мехенди и другие — своя ставка за час и норма участников на мастера. Правки видны сразу и сохраняются в этом браузере. Чтобы обновить на сайте для всех, скопируйте JSON и вставьте в файл <b>acts.json</b> на GitHub.</p>
+        <div class="pick" style="max-width:480px">
+          <input id="actSearch" placeholder="Найдите активность, чтобы изменить ставку" autocomplete="off">
+          <div class="opts" id="actOpts"></div>
+        </div>
+        <div id="actForm"></div>
+        <div class="row">
+          <button class="btn" id="actNew">Добавить новую активность</button>
+          <button class="btn ghost" id="actExport">Скопировать активности (JSON)</button>
+          <button class="btn ghost" id="actRestore">Вернуть исходные активности</button>
+        </div>
+      </div>
     </details>
   </div>
 
@@ -319,15 +334,8 @@ details.set[open] summary:after{transform:rotate(-135deg);margin-top:2px}
 const MK_BUILTIN = /*__MK__*/[];
 let MK = loadMk() || MK_BUILTIN.slice();
 
-const ACTS = [
-  {n:'Аэротату',                  h1:4500, hx:3500, per:15, note:'3 до 5 минут на участника'},
-  {n:'Мехенди (хэнди)',           h1:4500, hx:3500, per:3,  note:'20 минут на участника', est:1},
-  {n:'Аквагрим',                  h1:4500, hx:3500, per:6,  note:'10 минут на участника', est:1},
-  {n:'Глиттер-бар',               h1:4000, hx:3000, per:10, note:'6 минут на участника'},
-  {n:'Переводные и флеш-тату',    h1:4500, hx:3500, per:30, note:'30 участников в час на мастера', est:1},
-  {n:'Сборка и разборка оружия',  h1:3000, hx:2500, per:10, note:'2 минуты сборка, 2 разборка, 2 на заминки'},
-  {n:'Бьюти-бар (косы)',          h1:4500, hx:3500, per:2,  note:'1 час, 1 мастер, 2 до 3 человек'}
-];
+const ACTS_BUILTIN = /*__ACTS__*/[];
+let ACTS = loadActs() || ACTS_BUILTIN.slice();
 
 const F = n => new Intl.NumberFormat('ru-RU').format(Math.round(n));
 const el = id => document.getElementById(id);
@@ -343,6 +351,8 @@ function save(){ try{ localStorage.setItem('kalk-mk-v1', JSON.stringify(S)); fla
 function load(){ try{ const r=localStorage.getItem('kalk-mk-v1'); return r?JSON.parse(r):null; }catch(e){ return null; } }
 function saveMk(){ try{ localStorage.setItem('kalk-mk-prices-v1', JSON.stringify(MK)); flash(); }catch(e){} }
 function loadMk(){ try{ const r=localStorage.getItem('kalk-mk-prices-v1'); return r?JSON.parse(r):null; }catch(e){ return null; } }
+function saveActs(){ try{ localStorage.setItem('kalk-mk-acts-v1', JSON.stringify(ACTS)); flash(); }catch(e){} }
+function loadActs(){ try{ const r=localStorage.getItem('kalk-mk-acts-v1'); return r?JSON.parse(r):null; }catch(e){ return null; } }
 let flashT;
 function flash(){ const n=el('saveNote'); n.textContent='сохранено'; clearTimeout(flashT);
   flashT=setTimeout(()=>n.textContent='расчёт сохраняется автоматически',1600); }
@@ -664,6 +674,83 @@ function initPriceSearch(){
   };
 }
 
+/* ── активности (редактор в настройках) ── */
+let actEditIndex = null;
+function renderActForm(){
+  const box = el('actForm');
+  if(actEditIndex === null){ box.innerHTML = ''; return; }
+  const isNew = actEditIndex === 'new';
+  const it = isNew ? {n:'', h1:0, hx:0, per:0, note:'', est:0} : ACTS[actEditIndex];
+  box.innerHTML =
+    '<div class="sets" style="margin-top:4px">' +
+      '<div><label>Название</label><input type="text" id="af-n" value="' + esc(it.n) + '"></div>' +
+      '<div><label>Первый час, ₽</label><input type="number" id="af-h1" value="' + (it.h1||0) + '" min="0" step="50"></div>' +
+      '<div><label>Каждый следующий час, ₽</label><input type="number" id="af-hx" value="' + (it.hx||0) + '" min="0" step="50"></div>' +
+      '<div><label>Участников на мастера в час</label><input type="number" id="af-per" value="' + (it.per||0) + '" min="0" step="1"></div>' +
+      '<div><label>Комментарий (норма из таблицы)</label><input type="text" id="af-note" value="' + esc(it.note||'') + '"></div>' +
+      '<div><label>Ставка ориентировочная</label><div class="toggle" id="af-est">' +
+        '<button data-v="0" class="' + (it.est ? '' : 'on') + '">Нет, из таблицы</button>' +
+        '<button data-v="1" class="' + (it.est ? 'on' : '') + '">Да, прикидка</button>' +
+      '</div></div>' +
+    '</div>' +
+    '<div class="row">' +
+      '<button class="btn" id="af-save">' + (isNew ? 'Добавить активность' : 'Сохранить') + '</button>' +
+      (isNew ? '' : '<button class="btn ghost" id="af-del">Удалить активность</button>') +
+      '<button class="btn ghost" id="af-cancel">Отмена</button>' +
+    '</div>';
+
+  document.querySelectorAll('#af-est button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('#af-est button').forEach(x => x.classList.toggle('on', x === b));
+  });
+
+  el('af-save').onclick = () => {
+    const name = el('af-n').value.trim();
+    if(!name){ toast('Впишите название активности'); return; }
+    const h1 = Math.max(0, +el('af-h1').value||0), hx = Math.max(0, +el('af-hx').value||0), per = Math.max(0, +el('af-per').value||0);
+    const note = el('af-note').value.trim();
+    const est = document.querySelector('#af-est button.on').dataset.v === '1';
+    const item = {n:name, h1, hx, per, note};
+    if(est) item.est = 1;
+    if(isNew) ACTS.push(item); else ACTS[actEditIndex] = item;
+    saveActs(); actEditIndex = null; renderActForm(); render();
+    toast(isNew ? 'Активность добавлена' : 'Активность обновлена');
+  };
+  if(!isNew){
+    el('af-del').onclick = () => {
+      ACTS.splice(actEditIndex, 1); saveActs(); actEditIndex = null; renderActForm(); render();
+      toast('Активность удалена');
+    };
+  }
+  el('af-cancel').onclick = () => { actEditIndex = null; renderActForm(); };
+}
+
+function initActSearch(){
+  const inp = el('actSearch'), box = el('actOpts');
+  const fmt = x => F(x.h1) + ' ₽ первый час · ' + F(x.hx) + ' ₽ далее · ' + x.per + ' чел/ч на мастера';
+  const show = () => {
+    const s = inp.value.toLowerCase().trim();
+    const idx = ACTS.map((x,i)=>i).filter(i => !s || ACTS[i].n.toLowerCase().includes(s));
+    box.innerHTML = idx.map(i => '<div data-i="' + i + '">' + esc(ACTS[i].n) + ' <span>' + esc(fmt(ACTS[i])) + '</span></div>').join('')
+      || '<div style="color:#9a9aa2;cursor:default">ничего не нашлось</div>';
+    box.classList.add('open');
+  };
+  inp.addEventListener('focus', show);
+  inp.addEventListener('input', show);
+  inp.addEventListener('blur', () => setTimeout(() => box.classList.remove('open'), 180));
+  box.addEventListener('mousedown', e => {
+    const v = e.target.closest('div[data-i]'); if(!v) return;
+    actEditIndex = +v.dataset.i; inp.value = ''; box.classList.remove('open'); renderActForm();
+  });
+  el('actNew').onclick = () => { actEditIndex = 'new'; renderActForm(); };
+  el('actExport').onclick = () => {
+    navigator.clipboard.writeText(JSON.stringify(ACTS)).then(() => toast('Активности скопированы — вставьте в acts.json на GitHub'));
+  };
+  el('actRestore').onclick = () => {
+    ACTS = ACTS_BUILTIN.slice(); saveActs(); actEditIndex = null; renderActForm(); render();
+    toast('Активности восстановлены к исходным');
+  };
+}
+
 /* ── события ── */
 bindField('guests', v => { S.guests = v; });
 bindField('hours', v => { S.hours = v; });
@@ -675,7 +762,10 @@ document.querySelectorAll('#rangeMode button').forEach(b => b.onclick = () => { 
 }));
 
 el('addMk').onclick = () => { S.mk.push({name:'', p:0}); render(); save(); };
-el('addAct').onclick = () => { S.act.push({name:ACTS[0].n, m:1, h:Math.max(1, S.hours)}); render(); save(); };
+el('addAct').onclick = () => {
+  if(!ACTS.length){ toast('Сначала добавьте активность в «Прайс и категории»'); return; }
+  S.act.push({name:ACTS[0].n, m:1, h:Math.max(1, S.hours)}); render(); save();
+};
 el('splitEven').onclick = () => {
   if(!S.mk.length) return;
   const per = Math.max(1, Math.round(S.guests / S.mk.length));
@@ -718,6 +808,7 @@ function toast(msg){ const t = el('toast'); t.textContent = msg; t.classList.add
   clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1900); }
 
 initPriceSearch();
+initActSearch();
 render();
 </script>
 </body></html>
