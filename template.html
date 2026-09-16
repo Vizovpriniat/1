@@ -196,7 +196,7 @@ details.set[open] summary:after{transform:rotate(-135deg);margin-top:2px}
 
   <div class="card">
     <h2>Мастер-классы</h2>
-    <p class="lead">Впишите участников на каждый мастер-класс — число мастеров и цену расходников по диапазону посчитаем сами.</p>
+    <p class="lead">Впишите участников на каждый мастер-класс — число мастеров посчитаем сами, но его можно поправить вручную, если автоподсчёт не подходит.</p>
     <div id="mkList"></div>
     <div class="row">
       <button class="btn" id="addMk">Добавить мастер-класс</button>
@@ -297,7 +297,7 @@ details.set[open] summary:after{transform:rotate(-135deg);margin-top:2px}
     </details>
   </div>
 
-  <p class="foot">Все ставки и формулы взяты из первой вкладки таблицы «Калькулятор МК (х1,67)». Мастера считаются по числу участников с округлением вверх. Цена клиенту это расход, умноженный на наценку.</p>
+  <p class="foot">Все ставки и формулы взяты из первой вкладки таблицы «Калькулятор МК (х1,67)». Мастера считаются по числу участников с округлением вверх, если не задать их число вручную в поле «Мастеров». Цена клиенту это расход, умноженный на наценку.</p>
 </div>
 
 <div>
@@ -372,12 +372,14 @@ function priceOf(item, parts){
 function calcMk(it){
   const norm = Math.max(1, +S.norm), hours = Math.max(1, +S.hours);
   const parts = Math.max(0, it.p|0);
-  const masters = Math.ceil(parts / (norm * hours));
+  const autoMasters = Math.ceil(parts / (norm * hours));
+  const isManual = it.m != null && it.m !== '';
+  const masters = isManual ? Math.max(0, it.m|0) : autoMasters;
   const pr = priceOf(it, parts);
   const perMaster = (+S.base) + (hours - 1) * (+S.add);
   const costMasters = perMaster * masters;
   const costMat = pr ? parts * pr.val : 0;
-  return {parts, masters, hours, price:pr, perMaster, costMasters, costMat};
+  return {parts, masters, autoMasters, isManual, hours, price:pr, perMaster, costMasters, costMat};
 }
 
 /* расчёт одной активности */
@@ -422,11 +424,17 @@ function renderMk(){
     const r = calcMk(it);
     const m = r.price ? r.price.mk : null;
     const noPrice = !r.price;
+    const mHint = r.isManual
+      ? 'Задано вручную · <a href="#" data-autom="' + i + '" style="color:var(--g);font-weight:700">сбросить на авто (' + r.autoMasters + ')</a>'
+      : 'Автоматически: участников делим на ' + S.norm + ' в час и округляем вверх';
     return '<div class="item"><div class="head"><div class="num">' + (i+1) + '</div>' +
       '<div class="pick"><input id="pk'+i+'" value="' + esc(it.name) + '" placeholder="Начните вводить название" autocomplete="off">' +
       '<div class="opts" id="op'+i+'"></div></div>' +
       '<button class="del" data-del="'+i+'" title="Убрать">×</button></div>' +
-      '<div class="sliders one">' + field('mp'+i, 'Участников', it.p|0, 0, 1000, 1, 'Сколько человек пройдёт этот мастер-класс') + '</div>' +
+      '<div class="sliders">' +
+        field('mp'+i, 'Участников', it.p|0, 0, 1000, 1, 'Сколько человек пройдёт этот мастер-класс') +
+        field('mm'+i, 'Мастеров', r.masters, 0, 30, 1, mHint) +
+      '</div>' +
       '<div class="mini">' +
         '<div><b>' + r.masters + '</b>мастеров нужно</div>' +
         '<div><b>' + r.hours + ' ч</b>длительность мероприятия</div>' +
@@ -452,10 +460,15 @@ function renderMk(){
     if(!findMk(it.name)) inp.classList.add('bad');
 
     bindField('mp'+i, v => { it.p = v; });
+    bindField('mm'+i, v => { it.m = v; });
   });
 
   document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
     S.mk.splice(+b.dataset.del, 1); render(); save();
+  });
+  document.querySelectorAll('[data-autom]').forEach(a => a.onclick = (e) => {
+    e.preventDefault();
+    S.mk[+a.dataset.autom].m = null; render(); save();
   });
 }
 
@@ -542,6 +555,12 @@ function renderMiniOnly(){
       m[2].innerHTML = '<b>' + (r.price ? F(r.price.val) + ' ₽' : 'нет цены') + '</b>' + (r.price ? 'за участника, ' + r.price.label : 'позиция не найдена');
       m[3].innerHTML = '<b>' + F((r.costMasters + r.costMat + (S.fixMode==='each' ? +S.fix : 0)) * (+S.margin)) + ' ₽</b>клиенту за этот МК';
     }
+    if(!r.isManual){
+      const nCell = el('n-mm'+i), rCell = el('mm'+i);
+      if(nCell && rCell && document.activeElement !== nCell){
+        nCell.value = r.masters; rCell.value = r.masters; fill(rCell);
+      }
+    }
   });
   S.act.forEach((it, i) => {
     const box = el('ap'+i); if(!box) return;
@@ -587,7 +606,7 @@ function renderTotals(){
 
   const nf = n => String(n).replace('.', ',');
   el('how').innerHTML = '<h4>Как считаем</h4>' +
-    '<p>Мастера на мастер-классе: участников делим на <b>' + S.norm + '</b> в час и округляем вверх.</p>' +
+    '<p>Мастера на мастер-классе: участников делим на <b>' + S.norm + '</b> в час и округляем вверх — если не задано вручную в поле «Мастеров».</p>' +
     '<p>Работа мастера: <b>' + F(S.base) + ' ₽</b> за первый час, дальше плюс <b>' + F(S.add) + ' ₽</b> за каждый следующий.</p>' +
     '<p>Расходники: цена мастер-класса за участника умножается на участников, плюс <b>' + F(S.fix) + ' ₽</b> ' +
       (S.fixMode === 'each' ? 'на каждый мастер-класс' : 'один раз на мероприятие') + '.</p>' +
