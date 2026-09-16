@@ -1,0 +1,12 @@
+{
+  "name": "kalkulyator-mk",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "python3 build.py",
+    "test": "python3 build.py && node test-formulas.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "25.1.0"
+  }
+}

@@ -1,0 +1,1 @@
+{"framework":null,"installCommand":"","buildCommand":"python3 build.py","outputDirectory":"public","headers":[{"source":"/(.*)","headers":[{"key":"X-Robots-Tag","value":"noindex, nofollow"}]}]}
