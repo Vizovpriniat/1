@@ -71,6 +71,8 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .item.actrow:hover{border-color:#9ad6b5;background:#fbfefc}
 .sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px 26px}
 .sliders.one{grid-template-columns:minmax(240px,360px)}
+.sliders.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:760px){.sliders.two{grid-template-columns:1fr}}
 
 /* ── выбор МК ── */
 .pick{position:relative;flex:1 1 260px;min-width:0}
@@ -91,6 +93,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .mini div{font-size:16px;color:var(--mut)}
 .mini div b{display:block;font-size:22px;font-weight:800;color:var(--ink);margin-bottom:2px;letter-spacing:-.01em}
 .mini div.acc b{color:var(--g)}
+.mini div.bad b{color:#e5484d}
 .mini div.txt{max-width:340px}
 .mini div.txt b{font-size:16px;font-weight:700;line-height:1.35}
 .warn{margin-top:14px;background:#fff8e6;border:1px solid #f0dfae;border-radius:12px;padding:12px 16px;
@@ -120,6 +123,13 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .res .row{margin-top:22px}
 .res .btn.ghost{background:transparent;color:#fff;border-color:#3a3a44}
 .res .btn.ghost:hover{background:#22222a;border-color:#4a4a56}
+.rwarn{background:#e5484d;color:#fff;border-radius:12px;padding:12px 16px;font-size:16px;font-weight:700;
+  line-height:1.35;margin-bottom:18px}
+.res.bad{background:#2a1215;box-shadow:0 0 0 3px #e5484d,0 18px 44px rgba(0,0,0,.5)}
+.res.bad .big,.res.bad .rrow.plus b{color:#ff6b6b}
+.res.bad .split{border-top-color:#e5484d}
+.split .li.bad span,.split .li.bad b{color:#ff8a8a}
+[hidden]{display:none!important}
 
 /* ── настройки ── */
 details.set summary{cursor:pointer;font-size:19px;font-weight:800;list-style:none;display:flex;align-items:center;gap:10px}
@@ -151,6 +161,8 @@ details.set[open] summary:after{transform:rotate(-135deg);margin-top:2px}
   .bar span{font-size:15px;color:#a8a8b2;line-height:1.3}
   .bar button{margin-left:auto;height:44px;padding:0 18px;border:0;border-radius:12px;background:var(--g);
     color:#fff;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap}
+  .bar.bad{background:#2a1215;border-top-color:#e5484d}
+  .bar.bad b{color:#ff6b6b}
   .w{padding-bottom:110px}
 }
 @media(max-width:520px){
@@ -207,7 +219,7 @@ details.set[open] summary:after{transform:rotate(-135deg);margin-top:2px}
 
   <div class="card">
     <h2>Отдельные активности</h2>
-    <p class="lead">Аэротату, мехенди, аквагрим и другие считаются по своей ставке за мастер-час. Число участников тут ориентировочное, от нормы на мастера.</p>
+    <p class="lead">Аэротату, мехенди, аквагрим и другие: впишите участников и цену за участника — клиент платит участники × цена. Мастеров считаем из участников по норме активности (можно поправить вручную), их работа по ставке за час — наш расход.</p>
     <div id="actList"></div>
     <div class="row">
       <button class="btn" id="addAct">Добавить активность</button>
@@ -297,13 +309,14 @@ details.set[open] summary:after{transform:rotate(-135deg);margin-top:2px}
     </details>
   </div>
 
-  <p class="foot">Все ставки и формулы взяты из первой вкладки таблицы «Калькулятор МК (х1,67)». Мастера считаются по числу участников с округлением вверх, если не задать их число вручную в поле «Мастеров». Цена клиенту это расход, умноженный на наценку.</p>
+  <p class="foot">Все ставки и формулы взяты из первой вкладки таблицы «Калькулятор МК (х1,67)». Мастера считаются по числу участников с округлением вверх, если не задать их число вручную в поле «Мастеров». Цена клиенту за мастер-классы — расход, умноженный на наценку; за активности — участники × цена за участника.</p>
 </div>
 
 <div>
   <div class="res">
     <h3>Итог</h3>
-    <div class="big"><span id="o-client">0 ₽</span><small>цена для клиента, с наценкой</small></div>
+    <div class="rwarn" id="res-warn" hidden></div>
+    <div class="big"><span id="o-client">0 ₽</span><small>цена для клиента</small></div>
 
     <div style="margin-top:24px">
       <div class="rrow"><b id="o-masters">0</b><span>мастеров нужно всего</span></div>
@@ -312,6 +325,7 @@ details.set[open] summary:after{transform:rotate(-135deg);margin-top:2px}
       <div class="rrow"><b id="o-mat">0 ₽</b><span>расходники и фикс</span></div>
       <div class="rrow"><b id="o-cost">0 ₽</b><span>расход всего</span></div>
       <div class="rrow plus"><b id="o-profit">0 ₽</b><span>остаётся нам сверх расхода</span></div>
+      <div class="rrow plus"><b id="o-mpct">—</b><span>маржа: прибыль ÷ цена клиенту</span></div>
       <div class="rrow"><b id="o-per">0 ₽</b><span>на одного гостя мероприятия</span></div>
     </div>
 
@@ -328,7 +342,7 @@ details.set[open] summary:after{transform:rotate(-135deg);margin-top:2px}
 </div>
 </div>
 <div class="bar">
-  <div><b id="bar-sum">0 ₽</b><span style="display:block">клиенту, <span id="bar-m">0</span> мастеров</span></div>
+  <div><b id="bar-sum">0 ₽</b><span style="display:block">клиенту, <span id="bar-m">0</span> мастеров · маржа <span id="bar-mp">—</span></span></div>
   <button id="barBtn">Показать итог</button>
 </div>
 <div class="toast" id="toast"></div>
@@ -342,13 +356,28 @@ let ACTS = loadActs() || ACTS_BUILTIN.slice();
 
 const F = n => new Intl.NumberFormat('ru-RU').format(Math.round(n));
 const el = id => document.getElementById(id);
+const nf = n => String(n).replace('.', ',');
+
+/* маржа = прибыль ÷ цена клиенту; ниже порога — такое не продаём */
+const MIN_MARGIN = 0.35;
+function marginOf(client, cost){ return client > 0 ? (client - cost) / client : (cost > 0 ? -Infinity : null); }
+function fmtMargin(x){ return x == null ? '—' : (x === -Infinity ? 'убыток' : nf((x * 100).toFixed(1)) + '%'); }
+function isBad(x){ return x != null && x < MIN_MARGIN - 1e-9; }
 
 let S = load() || {
   guests:200, hours:2, fixMode:'each', rangeMode:'mk',
   base:3500, add:500, norm:20, fix:2000, margin:1.67,
   mk:[{name:'Роспись кружек', p:100}, {name:'Свечи в банке', p:100}],
-  act:[{name:'Аэротату', m:1, h:2}]
+  act:[{name:'Аэротату', p:30, h:2}]
 };
+/* раньше в активностях задавали мастеров, а участники были оценкой — переносим старые расчёты без потерь */
+S.act.forEach(it => {
+  if(it.p != null) return;
+  const a = ACTS.find(x => x.n === it.name);
+  const per = a ? +a.per || 0 : 0;
+  it.p = per * Math.max(1, it.m|0) * Math.max(1, it.h|0);
+  if(per > 0) delete it.m;
+});
 
 function save(){ try{ localStorage.setItem('kalk-mk-v1', JSON.stringify(S)); flash(); }catch(e){} }
 function load(){ try{ const r=localStorage.getItem('kalk-mk-v1'); return r?JSON.parse(r):null; }catch(e){ return null; } }
@@ -382,24 +411,36 @@ function calcMk(it){
   return {parts, masters, autoMasters, isManual, hours, price:pr, perMaster, costMasters, costMat};
 }
 
-/* расчёт одной активности */
+/* расчёт одной активности: клиент платит участники × цена, наш расход — мастера × ставка */
 function calcAct(it){
-  const a = ACTS.find(x => x.n === it.name) || ACTS[0];
-  const masters = Math.max(1, it.m|0), hours = Math.max(1, it.h|0);
+  const a = ACTS.find(x => x.n === it.name) || ACTS[0] || {n:it.name, h1:0, hx:0, per:0, note:''};
+  const hours = Math.max(1, it.h|0);
+  const parts = Math.max(0, it.p|0);
+  const per = +a.per || 0;
+  const autoMasters = per > 0 ? Math.ceil(parts / (per * hours)) : (parts > 0 ? 1 : 0);
+  const isManual = it.m != null && it.m !== '';
+  const masters = isManual ? Math.max(0, it.m|0) : autoMasters;
   const rate = hours === 1 ? a.h1 : a.hx * hours;
   const cost = rate * masters;
-  return {a, masters, hours, cost, parts: a.per * masters * hours};
+  const autoPrice = parts > 0 ? Math.ceil(cost * (+S.margin) / parts / 10) * 10 : 0;
+  const priceManual = it.pp != null && it.pp !== '';
+  const price = priceManual ? Math.max(0, +it.pp || 0) : autoPrice;
+  const client = parts * price;
+  return {a, parts, hours, masters, autoMasters, isManual, cost, price, autoPrice, priceManual, client,
+    margin: marginOf(client, cost)};
 }
 
 function totals(){
   const mk = S.mk.map(calcMk), act = S.act.map(calcAct);
-  let work = 0, mat = 0, masters = 0, parts = 0;
-  mk.forEach(r => { work += r.costMasters; mat += r.costMat; masters += r.masters; parts += r.parts; });
-  act.forEach(r => { work += r.cost; masters += r.masters; parts += r.parts; });
+  let mkWork = 0, mkMat = 0, actCost = 0, actClient = 0, masters = 0, parts = 0;
+  mk.forEach(r => { mkWork += r.costMasters; mkMat += r.costMat; masters += r.masters; parts += r.parts; });
+  act.forEach(r => { actCost += r.cost; actClient += r.client; masters += r.masters; parts += r.parts; });
   const blocks = S.mk.length + S.act.length;
-  mat += (+S.fix) * (S.fixMode === 'each' ? S.mk.length : (blocks ? 1 : 0));
-  const cost = work + mat, client = cost * (+S.margin);
-  return {mk, act, cost, work, mat, client, masters, parts};
+  const fix = (+S.fix) * (S.fixMode === 'each' ? S.mk.length : (blocks ? 1 : 0));
+  const mkCost = mkWork + mkMat + fix;
+  const cost = mkCost + actCost, client = mkCost * (+S.margin) + actClient;
+  return {mk, act, cost, work: mkWork + actCost, mat: mkMat + fix, client, masters, parts,
+    margin: marginOf(client, cost)};
 }
 
 /* ── отрисовка ── */
@@ -475,18 +516,27 @@ function renderMk(){
 function renderAct(){
   el('actList').innerHTML = S.act.map((it, i) => {
     const r = calcAct(it);
+    const reset = (attr, text) => '<a href="#" ' + attr + '="' + i + '" style="color:var(--g);font-weight:700">' + text + '</a>';
+    const pHint = r.priceManual
+      ? 'Задано вручную · ' + reset('data-aautop', 'вернуть рекомендуемую (' + F(r.autoPrice) + ' ₽)')
+      : 'Рекомендуемая при наценке ' + nf(S.margin) + '. Поменяйте, если продаёте по другой цене';
+    const mHint = r.isManual
+      ? 'Задано вручную · ' + reset('data-aautom', 'сбросить на авто (' + r.autoMasters + ')')
+      : (+r.a.per > 0 ? 'Автоматически: участников делим на ' + r.a.per + ' в час на мастера' : 'Норма не задана в настройках, пока ставим 1 мастера — поправьте вручную');
     return '<div class="item act"><div class="head"><div class="num">' + (i+1) + '</div>' +
       '<div class="pick"><input id="ap'+i+'" value="' + esc(it.name) + '" placeholder="Выберите активность" autocomplete="off">' +
       '<div class="opts" id="ao'+i+'"></div></div>' +
       '<button class="del" data-adel="'+i+'" title="Убрать">×</button></div>' +
-      '<div class="sliders">' +
+      '<div class="sliders two">' +
+        field('apart'+i, 'Участников', r.parts, 0, 1000, 1, 'Сколько человек пройдёт активность') +
+        field('aprice'+i, 'Цена за участника, ₽', r.price, 0, 5000, 10, pHint) +
         field('ah'+i, 'Часов работы', r.hours, 1, 12, 1, 'Первый час по ставке ' + F(r.a.h1) + ' ₽, дальше по ' + F(r.a.hx) + ' ₽ за час') +
-        field('am'+i, 'Мастеров', r.masters, 1, 20, 1, 'Число мастеров задаёте вы') +
+        field('am'+i, 'Мастеров', r.masters, 0, 20, 1, mHint) +
       '</div>' +
       '<div class="mini">' +
-        '<div><b>' + r.parts + '</b>участников ориентировочно</div>' +
         '<div><b>' + F(r.cost) + ' ₽</b>расход</div>' +
-        '<div class="acc"><b>' + F(r.cost * (+S.margin)) + ' ₽</b>клиенту</div>' +
+        '<div class="acc"><b>' + F(r.client) + ' ₽</b>клиенту</div>' +
+        '<div class="' + (isBad(r.margin) ? 'bad' : '') + '"><b>' + fmtMargin(r.margin) + '</b>маржа</div>' +
         '<div class="txt"><b>' + esc(r.a.note) + '</b>норма работы из таблицы</div>' +
       '</div>' +
       (r.a.est ? '<div class="warn">В таблице ставка для этой активности не указана. Поставлена базовая: ' + F(r.a.h1) + ' ₽ за первый час и ' + F(r.a.hx) + ' ₽ за следующие. Поправьте, если ставка другая.</div>' : '') +
@@ -504,12 +554,20 @@ function renderAct(){
       const v = e.target.closest('div[data-v]'); if(!v) return;
       it.name = v.dataset.v; box.classList.remove('open'); render(); save();
     });
+    bindField('apart'+i, v => { it.p = v; });
+    bindField('aprice'+i, v => { it.pp = v; });
     bindField('ah'+i, v => { it.h = v; });
     bindField('am'+i, v => { it.m = v; });
   });
 
   document.querySelectorAll('[data-adel]').forEach(b => b.onclick = () => {
     S.act.splice(+b.dataset.adel, 1); render(); save();
+  });
+  document.querySelectorAll('[data-aautom]').forEach(a => a.onclick = (e) => {
+    e.preventDefault(); S.act[+a.dataset.aautom].m = null; render(); save();
+  });
+  document.querySelectorAll('[data-aautop]').forEach(a => a.onclick = (e) => {
+    e.preventDefault(); S.act[+a.dataset.aautop].pp = null; render(); save();
   });
 }
 
@@ -543,6 +601,14 @@ function bindField(id, set){
   });
 }
 
+/* авто-поле (не заданное вручную) подтягиваем к пересчитанному значению, если его сейчас не редактируют */
+function syncAuto(id, isAuto, val){
+  if(!isAuto) return;
+  const n = el('n-'+id), r = el(id);
+  if(!n || !r || document.activeElement === n) return;
+  n.value = val; r.value = val; fill(r);
+}
+
 /* мини-итоги внутри карточек без полной перерисовки, чтобы поле не теряло фокус */
 function renderMiniOnly(){
   S.mk.forEach((it, i) => {
@@ -555,22 +621,20 @@ function renderMiniOnly(){
       m[2].innerHTML = '<b>' + (r.price ? F(r.price.val) + ' ₽' : 'нет цены') + '</b>' + (r.price ? 'за участника, ' + r.price.label : 'позиция не найдена');
       m[3].innerHTML = '<b>' + F((r.costMasters + r.costMat + (S.fixMode==='each' ? +S.fix : 0)) * (+S.margin)) + ' ₽</b>клиенту за этот МК';
     }
-    if(!r.isManual){
-      const nCell = el('n-mm'+i), rCell = el('mm'+i);
-      if(nCell && rCell && document.activeElement !== nCell){
-        nCell.value = r.masters; rCell.value = r.masters; fill(rCell);
-      }
-    }
+    syncAuto('mm'+i, !r.isManual, r.masters);
   });
   S.act.forEach((it, i) => {
     const box = el('ap'+i); if(!box) return;
     const item = box.closest('.item'); const r = calcAct(it);
     const m = item.querySelectorAll('.mini > div');
     if(m.length >= 4){
-      m[0].innerHTML = '<b>' + r.parts + '</b>участников ориентировочно';
-      m[1].innerHTML = '<b>' + F(r.cost) + ' ₽</b>расход';
-      m[2].innerHTML = '<b>' + F(r.cost * (+S.margin)) + ' ₽</b>клиенту';
+      m[0].innerHTML = '<b>' + F(r.cost) + ' ₽</b>расход';
+      m[1].innerHTML = '<b>' + F(r.client) + ' ₽</b>клиенту';
+      m[2].className = isBad(r.margin) ? 'bad' : '';
+      m[2].innerHTML = '<b>' + fmtMargin(r.margin) + '</b>маржа';
     }
+    syncAuto('am'+i, !r.isManual, r.masters);
+    syncAuto('aprice'+i, !r.priceManual, r.price);
   });
 }
 
@@ -583,9 +647,17 @@ function renderTotals(){
   el('o-mat').textContent = F(t.mat) + ' ₽';
   el('o-cost').textContent = F(t.cost) + ' ₽';
   el('o-profit').textContent = F(t.client - t.cost) + ' ₽';
+  el('o-mpct').textContent = fmtMargin(t.margin);
   el('o-per').textContent = F(t.client / Math.max(1, S.guests)) + ' ₽';
   el('bar-sum').textContent = F(t.client) + ' ₽';
   el('bar-m').textContent = t.masters;
+  el('bar-mp').textContent = fmtMargin(t.margin);
+
+  const bad = isBad(t.margin);
+  document.querySelector('.res').classList.toggle('bad', bad);
+  document.querySelector('.bar').classList.toggle('bad', bad);
+  el('res-warn').hidden = !bad;
+  el('res-warn').textContent = 'Маржа ниже ' + Math.round(MIN_MARGIN * 100) + '% — такое не продаём';
 
   let rows = S.mk.map((it, i) => {
     const r = t.mk[i];
@@ -594,7 +666,8 @@ function renderTotals(){
   }).join('');
   rows += S.act.map((it, i) => {
     const r = t.act[i];
-    return '<div class="li"><span>' + esc(it.name) + '</span><b>' + F(r.cost * (+S.margin)) + ' ₽</b></div>';
+    return '<div class="li' + (isBad(r.margin) ? ' bad' : '') + '"><span>' + esc(it.name) + ' · маржа ' + fmtMargin(r.margin) +
+      '</span><b>' + F(r.client) + ' ₽</b></div>';
   }).join('');
   if(S.fixMode === 'once' && (S.mk.length + S.act.length))
     rows += '<div class="li"><span>Фикс к расходникам</span><b>' + F((+S.fix) * (+S.margin)) + ' ₽</b></div>';
@@ -604,14 +677,14 @@ function renderTotals(){
     : '<div class="li" style="color:#ffc98a"><span>Мест меньше, чем гостей</span><b>' + t.parts + ' из ' + S.guests + '</b></div>';
   el('split').innerHTML = rows + cover;
 
-  const nf = n => String(n).replace('.', ',');
   el('how').innerHTML = '<h4>Как считаем</h4>' +
     '<p>Мастера на мастер-классе: участников делим на <b>' + S.norm + '</b> в час и округляем вверх — если не задано вручную в поле «Мастеров».</p>' +
     '<p>Работа мастера: <b>' + F(S.base) + ' ₽</b> за первый час, дальше плюс <b>' + F(S.add) + ' ₽</b> за каждый следующий.</p>' +
     '<p>Расходники: цена мастер-класса за участника умножается на участников, плюс <b>' + F(S.fix) + ' ₽</b> ' +
       (S.fixMode === 'each' ? 'на каждый мастер-класс' : 'один раз на мероприятие') + '.</p>' +
-    '<p>Цена клиенту: весь расход умножаем на <b>' + nf(S.margin) + '</b>.</p>' +
-    '<p>Активности: своя ставка за мастер-час, участники ориентировочно по норме на мастера.</p>';
+    '<p>Цена клиенту за мастер-классы: расход умножаем на <b>' + nf(S.margin) + '</b>.</p>' +
+    '<p>Активности: клиент платит участники × цена за участника. Наш расход — мастера × ставка за час; мастеров считаем из участников по норме активности, если не заданы вручную.</p>' +
+    '<p>Маржа: прибыль ÷ цена клиенту. Ниже <b>' + Math.round(MIN_MARGIN * 100) + '%</b> всё горит красным — такое не продаём.</p>';
 }
 
 function render(){
@@ -783,14 +856,15 @@ bindField('hours', v => { S.hours = v; });
 
 document.querySelectorAll('#fixMode button').forEach(b => b.onclick = () => { S.fixMode = b.dataset.v; render(); save(); });
 document.querySelectorAll('#rangeMode button').forEach(b => b.onclick = () => { S.rangeMode = b.dataset.v; render(); save(); });
-['base','add','norm','fix','margin'].forEach(k => el('s-'+k).addEventListener('input', e => {
-  S[k] = +e.target.value || 0; renderMiniOnly(); renderTotals(); save();
-}));
+['base','add','norm','fix','margin'].forEach(k => {
+  el('s-'+k).addEventListener('input', e => { S[k] = +e.target.value || 0; renderMiniOnly(); renderTotals(); save(); });
+  el('s-'+k).addEventListener('change', render);
+});
 
 el('addMk').onclick = () => { S.mk.push({name:'', p:0}); render(); save(); };
 el('addAct').onclick = () => {
-  if(!ACTS.length){ toast('Сначала добавьте активность в «Прайс и категории»'); return; }
-  S.act.push({name:ACTS[0].n, m:1, h:Math.max(1, S.hours)}); render(); save();
+  if(!ACTS.length){ toast('Сначала добавьте активность в настройках «Активности»'); return; }
+  S.act.push({name:ACTS[0].n, p:0, h:Math.max(1, S.hours)}); render(); save();
 };
 el('splitEven').onclick = () => {
   if(!S.mk.length) return;
@@ -817,13 +891,15 @@ el('copyBtn').onclick = () => {
   });
   S.act.forEach((it, i) => {
     const r = t.act[i];
-    L.push(it.name + ': ' + r.masters + ' мастеров, ' + r.hours + ' ч, ориентировочно ' + r.parts + ' участников, клиенту ' + F(r.cost * (+S.margin)) + ' ₽');
+    L.push(it.name + ': ' + r.parts + ' участников × ' + F(r.price) + ' ₽, ' + r.masters + ' мастеров, ' + r.hours + ' ч, клиенту ' +
+      F(r.client) + ' ₽, маржа ' + fmtMargin(r.margin));
   });
   L.push('');
   L.push('Мастеров всего: ' + t.masters);
   L.push('Участников: ' + t.parts);
   L.push('Расход: ' + F(t.cost) + ' ₽');
   L.push('ИТОГО ДЛЯ КЛИЕНТА: ' + F(t.client) + ' ₽');
+  L.push('Маржа: ' + fmtMargin(t.margin) + (isBad(t.margin) ? ' — НИЖЕ ' + Math.round(MIN_MARGIN * 100) + '%, ТАКОЕ НЕ ПРОДАЁМ' : ''));
   navigator.clipboard.writeText(L.join('\n')).then(() => toast('Расчёт скопирован'));
 };
 
